@@ -1,30 +1,32 @@
 /*
     ***** BEGIN LICENSE BLOCK *****
-    
+
     Copyright © 2009 Center for History and New Media
                      George Mason University, Fairfax, Virginia, USA
                      http://zotero.org
-    
+
     This file is part of Zotero.
-    
+
     Zotero is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     Zotero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
-    
+
     You should have received a copy of the GNU Affero General Public License
     along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
-    
-	
+
+
 	Utilities based in part on code taken from Piggy Bank 2.1.1 (BSD-licensed)
-	
+
     ***** END LICENSE BLOCK *****
 */
+
+const { deepCopy, trim, trimInternal, lpad } = require('./modular/utilities.js');
 
 (function() {
 
@@ -228,31 +230,9 @@ var Utilities = {
 		return {firstName:firstName, lastName:lastName, creatorType:type};
 	},
 
-	/**
-	 * Removes leading and trailing whitespace from a string
-	 * @type String
-	 */
-	trim: function(/**String*/ s) {
-		if (typeof(s) != "string") {
-			throw new Error("trim: argument must be a string");
-		}
+	trim,
 
-		s = s.replace(/^\s+/, "");
-		return s.replace(/\s+$/, "");
-	},
-
-	/**
-	 * Cleans whitespace off a string and replaces multiple spaces with one
-	 * @type String
-	 */
-	trimInternal: function(/**String*/ s) {
-		if (typeof(s) != "string") {
-			throw new Error("trimInternal: argument must be a string");
-		}
-
-		s = s.replace(/[\xA0\r\n\s]+/g, " ");
-		return this.trim(s);
-	},
+	trimInternal,
 
 	/**
 	 * Cleans any non-word non-parenthesis characters off the ends of a string
@@ -410,7 +390,7 @@ var Utilities = {
 		}
 
 		return identifiers;
-	},	
+	},
 
 	/**
 	 * Strip info:doi prefix and any suffixes from a DOI
@@ -867,21 +847,7 @@ var Utilities = {
 		return pageNumbers;
 	},
 
-	/**
-	 * Pads a number or other string with a given string on the left
-	 *
-	 * @param {String} string String to pad
-	 * @param {String} pad String to use as padding
-	 * @length {Integer} length Length of new padded string
-	 * @type String
-	 */
-	lpad: function(string, pad, length) {
-		string = string ? string + '' : '';
-		while(string.length < length) {
-			string = pad + string;
-		}
-		return string;
-	},
+	lpad,
 
 	/**
 	 * Shorten and add an ellipsis to a string if necessary
@@ -932,8 +898,8 @@ var Utilities = {
 			forms = [forms, forms + 's'];
 		}
 		return num == 1 ? forms[0] : forms[1];
-	},
 
+	},
 
 	/**
 	 * Port of PHP's number_format()
@@ -1008,7 +974,7 @@ var Utilities = {
 					} else {
 						// this is not a skip word or comes after a colon;
 						// we must capitalize
-						// handle punctuation in the beginning, including multiple, as in "¿Qué pasa?"		
+						// handle punctuation in the beginning, including multiple, as in "¿Qué pasa?"
 						var punct = words[i].match(/^[\'\"¡¿“‘„«\s]+/);
 						punct = punct ? punct[0].length+1 : 1;
 						words[i] = words[i].length ? words[i].substr(0, punct).toUpperCase() +
@@ -1154,24 +1120,7 @@ var Utilities = {
 		]
 	},
 
-	/**
-	 * Performs a deep copy of a JavaScript object
-	 * @param {Object} obj
-	 * @return {Object}
-	 */
-	deepCopy: function(obj) {
-		var obj2 = (Array.isArray(obj) ? [] : {});
-		for(var i in obj) {
-			if(!obj.hasOwnProperty(i)) continue;
-
-			if(typeof obj[i] === "object" && obj[i] !== null) {
-				obj2[i] = Utilities.deepCopy(obj[i]);
-			} else {
-				obj2[i] = obj[i];
-			}
-		}
-		return obj2;
-	},
+	deepCopy,
 
 	/**
 	 * Find valid creator types for a given item type
@@ -1601,7 +1550,7 @@ var Utilities = {
 			}
 		}
 		return length;
-	},	
+	},
 
 	semverCompare(a, b) {
 		a = a.split('.').map(version => isNaN(parseInt(version)) ? version : parseInt(version));
@@ -1612,7 +1561,7 @@ var Utilities = {
 		}
 		return a.length - b.length; // E.g. 5.0.0 < 5.0.0.1
 	},
-	
+
 	allowedKeyChars: "23456789ABCDEFGHIJKLMNPQRSTUVWXYZ",
 
 	/**
@@ -1636,7 +1585,7 @@ var Utilities = {
 		Zotero.debug(`Zotero.Utilities.itemTypeExists() is deprecated -- use Zotero.Utilities.Item.itemTypeExists() instead`);
 		return Zotero.Utilities.Item.itemTypeExists(type);
 	},
-	
+
 	itemToCSLJSON: function(zoteroItem) {
 		Zotero.debug(`Zotero.Utilities.itemToCSLJSON() is deprecated -- use Zotero.Utilities.Item.itemToCSLJSON() instead`);
 		return Zotero.Utilities.Item.itemToCSLJSON(zoteroItem);

@@ -1,29 +1,33 @@
 /*
     ***** BEGIN LICENSE BLOCK *****
-    
+
     Copyright © 2009 Center for History and New Media
                      George Mason University, Fairfax, Virginia, USA
                      http://zotero.org
-    
+
     This file is part of Zotero.
-    
+
     Zotero is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    
+
     Zotero is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
-    
+
     You should have received a copy of the GNU Affero General Public License
     along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     ***** END LICENSE BLOCK *****
 */
 
+const { trimInternal, lpad } = require('./modular/utilities.js');
+
 (function() {
+
+const debug = typeof Zotero !== 'undefined' ? Zotero.debug : console ? console.log : function() {}; // eslint-disable-line no-undef
 
 var Utilities_Date = new function(){
 	this.isSQLDate = isSQLDate;
@@ -46,8 +50,8 @@ var Utilities_Date = new function(){
 	 * @param dateFormatsJSON {Object} the JSON from resource/dateFormats.json
 	 */
 	this.init = function (dateFormatsJSON) {
-		if ((Zotero.isFx || Zotero.isElectron) && !dateFormatsJSON) {
-			dateFormatsJSON = Zotero.File.getResource('resource://zotero/schema/dateFormats.json');
+		if ((typeof Zotero !== 'undefined' && (Zotero?.isFx || Zotero?.isElectron)) && !dateFormatsJSON) { // eslint-disable-line no-undef
+			dateFormatsJSON = Zotero.File.getResource('resource://zotero/schema/dateFormats.json'); // eslint-disable-line no-undef
 		}
 		if (!dateFormatsJSON) {
 			throw new Error("Zotero.Date.init() must be called with dateFormats.json");
@@ -56,7 +60,8 @@ var Utilities_Date = new function(){
 			dateFormatsJSON = JSON.parse(dateFormatsJSON);
 		}
 
-		var locale = Zotero.locale;
+		var locale = (typeof Zotero !== 'undefined' ? Zotero.locale : (globalThis?.navigator?.language ?? 'en-US')); // eslint-disable-line no-undef
+		
 		var english = locale.startsWith('en');
 		// If no exact match, try first two characters ('de')
 		if (!dateFormatsJSON[locale]) {
@@ -90,11 +95,11 @@ var Utilities_Date = new function(){
 				_monthsWithEnglish[key] = _months[key].concat(dateFormatsJSON['en-US'][key]);
 			}
 		}
-		
+
 		let months = _monthsWithEnglish.short.map(m => m.toLowerCase())
 			.concat(_monthsWithEnglish.long.map(m => m.toLowerCase()));
 		// TODO: Switch back to native RegExp in Fx102 when Unicode property escapes are supported
-		_monthRe = Zotero.Utilities.XRegExp("(.*)(?:^|[^\\p{L}])(" + months.join("|") + ")[^ ]*(?: (.*)$|$)", "iu");
+		_monthRe = new RegExp("(.*)(?:^|[^\\p{L}])(" + months.join("|") + ")[^ ]*(?: (.*)$|$)", "iu");
 	};
 
 
@@ -153,7 +158,7 @@ var Utilities_Date = new function(){
 				timeparts[0], timeparts[1], timeparts[2]);
 		}
 		catch (e){
-			Zotero.debug(sqldate + ' is not a valid SQL date', 2)
+			debug(sqldate + ' is not a valid SQL date', 2)
 			return false;
 		}
 	}
@@ -183,18 +188,18 @@ var Utilities_Date = new function(){
 				var seconds = date.getSeconds();
 			}
 
-			year = Zotero.Utilities.lpad(year, '0', 4);
-			month = Zotero.Utilities.lpad(month + 1, '0', 2);
-			day = Zotero.Utilities.lpad(day, '0', 2);
-			hours = Zotero.Utilities.lpad(hours, '0', 2);
-			minutes = Zotero.Utilities.lpad(minutes, '0', 2);
-			seconds = Zotero.Utilities.lpad(seconds, '0', 2);
+			year = lpad(year, '0', 4);
+			month = lpad(month + 1, '0', 2);
+			day = lpad(day, '0', 2);
+			hours = lpad(hours, '0', 2);
+			minutes = lpad(minutes, '0', 2);
+			seconds = lpad(seconds, '0', 2);
 
 			return year + '-' + month + '-' + day + ' '
 				+ hours + ':' + minutes + ':' + seconds;
 		}
 		catch (e){
-			Zotero.debug(date + ' is not a valid JS date', 2);
+			debug(date + ' is not a valid JS date', 2);
 			return '';
 		}
 	}
@@ -215,12 +220,12 @@ var Utilities_Date = new function(){
 		var minutes = date.getUTCMinutes();
 		var seconds = date.getUTCSeconds();
 
-		year = Zotero.Utilities.lpad(year, '0', 4);
-		month = Zotero.Utilities.lpad(month + 1, '0', 2);
-		day = Zotero.Utilities.lpad(day, '0', 2);
-		hours = Zotero.Utilities.lpad(hours, '0', 2);
-		minutes = Zotero.Utilities.lpad(minutes, '0', 2);
-		seconds = Zotero.Utilities.lpad(seconds, '0', 2);
+		year = lpad(year, '0', 4);
+		month = lpad(month + 1, '0', 2);
+		day = lpad(day, '0', 2);
+		hours = lpad(hours, '0', 2);
+		minutes = lpad(minutes, '0', 2);
+		seconds = lpad(seconds, '0', 2);
 
 		return year + '-' + month + '-' + day + 'T'
 			+ hours + ':' + minutes + ':' + seconds + 'Z';
@@ -275,7 +280,7 @@ var Utilities_Date = new function(){
 		};
 
 		if (typeof string == 'string' || typeof string == 'number') {
-			string = Zotero.Utilities.trimInternal(string.toString());
+			string = trimInternal(string.toString());
 		}
 
 		// skip empty things
@@ -307,7 +312,7 @@ var Utilities_Date = new function(){
 				date.order += m[6] ? 'y' : '';
 			} else {
 				// local style date (middle or little endian)
-				var country = Zotero.locale ? Zotero.locale.substr(3) : "US";
+				var country = (typeof Zotero !== 'undefined' ? Zotero.locale : (globalThis?.navigator?.language || 'en-US')).substr(3); // eslint-disable-line no-undef
 				if(country == "US" ||	// The United States
 					country == "FM" ||	// The Federated States of Micronesia
 					country == "PW" ||	// Palau
@@ -374,14 +379,14 @@ var Utilities_Date = new function(){
 				);
 			} else {
 				// give up; we failed the sanity check
-				Zotero.debug("DATE: algorithms failed sanity check");
+				debug("DATE: algorithms failed sanity check");
 				var date = {
 					order: ''
 				};
 				parts.push({ part: string });
 			}
 		} else {
-			//Zotero.debug("DATE: could not apply algorithms");
+			//debug("DATE: could not apply algorithms");
 			parts.push({ part: string });
 		}
 
@@ -398,7 +403,7 @@ var Utilities_Date = new function(){
 						{ part: m[1], before: true },
 						{ part: m[3] }
 					);
-					//Zotero.debug("DATE: got year (" + date.year + ", " + JSON.stringify(parts) + ")");
+					//debug("DATE: got year (" + date.year + ", " + JSON.stringify(parts) + ")");
 					break;
 				}
 			}
@@ -421,7 +426,7 @@ var Utilities_Date = new function(){
 						{ part: m[1], before: "m" },
 						{ part: m[3], after: "m" }
 					);
-					//Zotero.debug("DATE: got month (" + date.month + ", " + JSON.stringify(parts) + ")");
+					//debug("DATE: got month (" + date.month + ", " + JSON.stringify(parts) + ")");
 					break;
 				}
 			}
@@ -431,7 +436,7 @@ var Utilities_Date = new function(){
 		if(!date.day) {
 			// compile day regular expression
 			if(!_dayRe) {
-				var daySuffixes = Zotero.isClient ? Zotero.getString("date.daySuffixes").replace(/, ?/g, "|") : "";
+				var daySuffixes = (typeof Zotero !== 'undefined' && Zotero.isClient) ? Zotero.getString("date.daySuffixes").replace(/, ?/g, "|") : ""; // eslint-disable-line no-undef
 				_dayRe = new RegExp("\\b([0-9]{1,2})(?:"+daySuffixes+")?\\b(.*)", "i");
 			}
 
@@ -455,7 +460,7 @@ var Utilities_Date = new function(){
 							i, 1,
 							{ part: part }
 						);
-						//Zotero.debug("DATE: got day (" + date.day + ", " + JSON.stringify(parts) + ")");
+						//debug("DATE: got day (" + date.day + ", " + JSON.stringify(parts) + ")");
 						break;
 					}
 				}
@@ -601,11 +606,11 @@ var Utilities_Date = new function(){
 		var date = this.strToDate(str);
 
 		if(date.year) {
-			var dateString = Zotero.Utilities.lpad(date.year, "0", 4);
+			var dateString = lpad(date.year, "0", 4);
 			if (parseInt(date.month) == date.month) {
-				dateString += "-"+Zotero.Utilities.lpad(date.month+1, "0", 2);
+				dateString += "-"+lpad(date.month+1, "0", 2);
 				if(date.day) {
-					dateString += "-"+Zotero.Utilities.lpad(date.day, "0", 2);
+					dateString += "-"+lpad(date.day, "0", 2);
 				}
 			}
 			return dateString;
@@ -654,9 +659,9 @@ var Utilities_Date = new function(){
 
 		parts.month = typeof parts.month != "undefined" ? parts.month + 1 : '';
 
-		var multi = (parts.year ? Zotero.Utilities.lpad(parts.year, '0', 4) : '0000') + '-'
-			+ Zotero.Utilities.lpad(parts.month, '0', 2) + '-'
-			+ (parts.day ? Zotero.Utilities.lpad(parts.day, '0', 2) : '00')
+		var multi = (parts.year ? lpad(parts.year, '0', 4) : '0000') + '-'
+			+ lpad(parts.month, '0', 2) + '-'
+			+ (parts.day ? lpad(parts.day, '0', 2) : '00')
 			+ ' '
 			+ str;
 		return multi;
@@ -727,13 +732,13 @@ var Utilities_Date = new function(){
 		// Parse 'yesterday'/'today'/'tomorrow' and convert to dates,
 		// since it doesn't make sense for those to be actual metadata values
 		var lc = str.toLowerCase().trim();
-		if (lc == 'yesterday' || lc == Zotero.getString('date.yesterday')) {
+		if (lc == 'yesterday' || lc == Zotero?.getString('date.yesterday')) { // eslint-disable-line no-undef
 			str = Utilities_Date.dateToSQL(new Date(new Date().getTime() - 86400000)).substr(0, 10);
 		}
-		else if (lc == 'today' || lc == Zotero.getString('date.today')) {
+		else if (lc == 'today' || lc == Zotero?.getString('date.today')) { // eslint-disable-line no-undef
 			str = Utilities_Date.dateToSQL(new Date()).substr(0, 10);
 		}
-		else if (lc == 'tomorrow' || lc == Zotero.getString('date.tomorrow')) {
+		else if (lc == 'tomorrow' || lc == Zotero?.getString('date.tomorrow')) { // eslint-disable-line no-undef
 			str = Utilities_Date.dateToSQL(new Date(new Date().getTime() + 86400000)).substr(0, 10);
 		}
 		return str;
@@ -852,7 +857,7 @@ var Utilities_Date = new function(){
 			var n = Math.round(inYears);
 		}
 
-		return Zotero.getString("date.relative." + key + "." + (n ? "multiple" : "one"), n);
+		return Zotero?.getString("date.relative." + key + "." + (n ? "multiple" : "one"), n); // eslint-disable-line no-undef
 	}
 
 
@@ -910,7 +915,7 @@ var Utilities_Date = new function(){
 	 */
 	function getLocaleDateOrder(){
 		if (!_localeDateOrder) {
-			switch (Zotero.locale ? Zotero.locale.substr(3) : "US") {
+			switch ((typeof Zotero !== 'undefined' ? Zotero.locale : (globalThis?.navigator?.language || 'en-US')).substr(3)) { // eslint-disable-line no-undef
 				// middle-endian
 			case 'US': // The United States
 			case 'BZ': // Belize
@@ -952,7 +957,7 @@ var Utilities_Date = new function(){
 if (typeof module != 'undefined') {
 	module.exports = Utilities_Date;
 } else if (typeof Zotero != 'undefined') {
-	Zotero.Date = Utilities_Date;
+	Zotero.Date = Utilities_Date; // eslint-disable-line no-undef
 }
 
 })();
